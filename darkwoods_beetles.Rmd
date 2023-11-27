@@ -1,0 +1,84 @@
+---
+title: "Remote sensing of Mountain pine beetle outbreaks; Darkwoods Conservation Area"
+author: "SMurphy"
+date: "2020-11-02"
+output: github_document
+---
+
+
+```{r setup, include=FALSE}
+library(readxl)
+#library(spdep)
+#library(gstat)
+#library(rgdal)
+#library(maptools)
+#library(raster)
+#library(spatstat)
+#library(GISTools)
+#library(rgeos)
+#library(sp)
+#library(rpanel)
+#library(ncf)
+#library(sf)
+#library(spatial)
+#library(spatstat.data)
+#library(spatstat.local)
+library(ggplot2)
+library(dplyr)
+library(RColorBrewer)
+library(psych)
+library(useful)
+library(caret)
+library(tibble)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Import & tidy
+
+Set seeds to "123". Import excel data representing plot-sampled pixel data from candidate spectral indices.
+
+```{r}
+set.seed(123) 
+darkwoods_beetle_plots_data <- read_excel("2.1.darkwoods_beetle_ground_plots.xlsx")
+print(darkwoods_beetle_plots_data)
+```
+
+## Derive NDMI predictors
+
+```{r}
+beetle_ndmi <- lm(pi_mpb_killed ~ ndmi, data = darkwoods_beetle_plots_data)
+beetle_ndmi_residuals <- resid(beetle_ndmi)
+summary(beetle_ndmi)
+
+plot(pi_mpb_killed ~ ndmi, data = darkwoods_beetle_plots_data, 
+     main=NULL, 
+     ylab = "Basal area of pine trees killed by MPB", xlab = "NDMI", col="blue") +
+  abline(lm(pi_mpb_killed ~ ndmi, data = darkwoods_beetle_plots_data), col = "red")
+```
+
+## Train models
+
+Splitting data 70:30 for training samples based on outcome variable.
+
+```{r}
+beetle_training.samples <- createDataPartition(darkwoods_beetle_plots_data$pi_mpb_killed, p=0.70, list = FALSE)
+beetle_train.data <- darkwoods_beetle_plots_data[beetle_training.samples, ]
+beetle_test.data <- darkwoods_beetle_plots_data[-beetle_training.samples, ]
+```
+
+
+#### Model training method: time-series
+
+```{r}
+model_training_time_series <- trainControl(method = "timeslice",
+                                           initialWindow = 36,
+                                           horizon = 12,
+                                           fixedWindow = TRUE)
+```
+
+#### Model training method: 10K-Fold x10repeat
+
+```{r}
+model_training_10kfold <- trainControl(method = "repeatedcv", 
+                                       number = 10, repeats = 10)
+```
