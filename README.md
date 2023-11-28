@@ -16,52 +16,52 @@ print(darkwoods_beetle_plots_data)
 ```
 
     ## # A tibble: 28 × 7
-    ##     plot pi_mpb_killed `pi_mpb_killed%`    ndmi taswet tasgre tasbri
-    ##    <dbl>         <dbl>            <dbl>   <dbl>  <dbl>  <dbl>  <dbl>
-    ##  1    28          1.18             2.35 -0.0530 -3943.  8455. 16365 
-    ##  2    27         44.8             89.7  -0.163  -3627.  8214. 15823.
-    ##  3    26         47.4             94.7  -0.166  -3653.  8290. 15922.
-    ##  4    25         10.5             20.9  -0.117  -3779.  8399. 16154.
-    ##  5    24         12.4             24.9  -0.121  -4430.  8708. 16996.
-    ##  6    23         15.7             31.4  -0.128  -3957.  8499. 16350.
-    ##  7    22         29.6             59.2  -0.138  -4460.  8701. 16967.
-    ##  8    21         27.1             54.1  -0.133  -4374.  8755. 17018.
-    ##  9    20         32.1             64.3  -0.139  -4821.  9452. 18099.
-    ## 10    19         42.3             84.6  -0.156  -4057.  8474. 16402.
+    ##     plot pi_mpb_killed pi_mpb_killed_pc   ndmi taswet tasgre tasbri
+    ##    <dbl>         <dbl>            <dbl>  <dbl>  <dbl>  <dbl>  <dbl>
+    ##  1    26          47.4             75.4 -0.166 -3653.  8290. 15922.
+    ##  2    27          44.8             77.9 -0.163 -3627.  8214. 15823.
+    ##  3    19          42.3             80.3 -0.156 -4057.  8474. 16402.
+    ##  4     2          39.8             80.7 -0.153 -3478.  8063. 15531.
+    ##  5     3          37.2             80.7 -0.152 -3576.  8188. 15796.
+    ##  6    17          34.7             81.3 -0.140 -4135.  8744. 16855.
+    ##  7    20          32.1             81.5 -0.139 -4821.  9452. 18099.
+    ##  8    22          29.6             81.7 -0.138 -4460.  8701. 16967.
+    ##  9    21          27.1             82.4 -0.133 -4374.  8755. 17018.
+    ## 10    18          26.8             82.5 -0.131 -5081.  9102. 17824.
     ## # ℹ 18 more rows
 
 ## Derive NDMI predictors
 
 ``` r
-beetle_ndmi <- lm(pi_mpb_killed ~ ndmi, data = darkwoods_beetle_plots_data)
+beetle_ndmi <- lm(pi_mpb_killed_pc ~ ndmi, data = darkwoods_beetle_plots_data)
 beetle_ndmi_residuals <- resid(beetle_ndmi)
 summary(beetle_ndmi)
 ```
 
     ## 
     ## Call:
-    ## lm(formula = pi_mpb_killed ~ ndmi, data = darkwoods_beetle_plots_data)
+    ## lm(formula = pi_mpb_killed_pc ~ ndmi, data = darkwoods_beetle_plots_data)
     ## 
     ## Residuals:
     ##     Min      1Q  Median      3Q     Max 
-    ## -10.241  -8.130  -5.118   7.465  26.500 
+    ## -6.7582 -1.5253  0.5376  2.0439  3.0846 
     ## 
     ## Coefficients:
     ##             Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)  -16.066      5.997  -2.679   0.0126 *  
-    ## ndmi        -294.942     49.005  -6.019 2.35e-06 ***
+    ## (Intercept)  100.470      1.431   70.20  < 2e-16 ***
+    ## ndmi         124.421     11.695   10.64 5.75e-11 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 9.991 on 26 degrees of freedom
-    ## Multiple R-squared:  0.5822, Adjusted R-squared:  0.5661 
-    ## F-statistic: 36.22 on 1 and 26 DF,  p-value: 2.346e-06
+    ## Residual standard error: 2.384 on 26 degrees of freedom
+    ## Multiple R-squared:  0.8132, Adjusted R-squared:  0.806 
+    ## F-statistic: 113.2 on 1 and 26 DF,  p-value: 5.75e-11
 
 ``` r
-plot(pi_mpb_killed ~ ndmi, data = darkwoods_beetle_plots_data, 
+plot(pi_mpb_killed_pc ~ ndmi, data = darkwoods_beetle_plots_data, 
      main=NULL, 
-     ylab = "Basal area of pine trees killed by MPB", xlab = "NDMI", col="blue") +
-  abline(lm(pi_mpb_killed ~ ndmi, data = darkwoods_beetle_plots_data), col = "red")
+     ylab = "Percent of basal area of pine trees killed by MPB", xlab = "NDMI", col="blue") +
+  abline(lm(pi_mpb_killed_pc ~ ndmi, data = darkwoods_beetle_plots_data), col = "red")
 ```
 
 ![](darkwoods_beetles_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->

@@ -52,7 +52,7 @@ summary(beetle_ndmi)
 
 plot(pi_mpb_killed_pc ~ ndmi, data = darkwoods_beetle_plots_data, 
      main=NULL, 
-     ylab = "Basal area of pine trees killed by MPB", xlab = "NDMI", col="blue") +
+     ylab = "Percent of basal area of pine trees killed by MPB", xlab = "NDMI", col="blue") +
   abline(lm(pi_mpb_killed_pc ~ ndmi, data = darkwoods_beetle_plots_data), col = "red")
 ```
 
