@@ -46,14 +46,14 @@ print(darkwoods_beetle_plots_data)
 ## Derive NDMI predictors
 
 ```{r}
-beetle_ndmi <- lm(pi_mpb_killed ~ ndmi, data = darkwoods_beetle_plots_data)
+beetle_ndmi <- lm(pi_mpb_killed_pc ~ ndmi, data = darkwoods_beetle_plots_data)
 beetle_ndmi_residuals <- resid(beetle_ndmi)
 summary(beetle_ndmi)
 
-plot(pi_mpb_killed ~ ndmi, data = darkwoods_beetle_plots_data, 
+plot(pi_mpb_killed_pc ~ ndmi, data = darkwoods_beetle_plots_data, 
      main=NULL, 
      ylab = "Basal area of pine trees killed by MPB", xlab = "NDMI", col="blue") +
-  abline(lm(pi_mpb_killed ~ ndmi, data = darkwoods_beetle_plots_data), col = "red")
+  abline(lm(pi_mpb_killed_pc ~ ndmi, data = darkwoods_beetle_plots_data), col = "red")
 ```
 
 ## Train models
