@@ -24,8 +24,9 @@ library(DescTools)
 library(animation)
 library(ModelMetrics)
 knitr::opts_chunk$set(
-  echo = TRUE, message = FALSE, warning = FALSE, 
-  error=FALSE, comment = NA,tidy.opts=list(width.cutoff=60),tidy=TRUE)
+  echo = TRUE, message = FALSE, warning = FALSE,
+  error = FALSE, comment = NA, tidy.opts = list(width.cutoff = 60), tidy = "styler"
+)
 ```
 
 ## 1. Model Designs
@@ -35,7 +36,7 @@ knitr::opts_chunk$set(
 Set seeds to `123`. Import excel data representing training data of red-stage beetle attacks from candidate spectral indices sample in-field in forest health surveys.
 
 ```{r, message=FALSE, warning=FALSE}
-set.seed(123) 
+set.seed(123)
 darkwoods_beetle_plots_data <- read_excel("2.1.darkwoods_beetle_ground_plots.xlsx")
 print(darkwoods_beetle_plots_data)
 ```
@@ -47,9 +48,11 @@ beetle_ndmi <- lm(pi_mpb_killed_pc ~ ndmi, data = darkwoods_beetle_plots_data)
 beetle_ndmi_residuals <- resid(beetle_ndmi)
 summary(beetle_ndmi)
 
-plot(pi_mpb_killed_pc ~ ndmi, data = darkwoods_beetle_plots_data, 
-     main=NULL, 
-     ylab = "Percent of basal area of pine trees killed by MPB", xlab = "NDMI", col="blue") +
+plot(pi_mpb_killed_pc ~ ndmi,
+  data = darkwoods_beetle_plots_data,
+  main = NULL,
+  ylab = "Percent of basal area of pine trees killed by MPB", xlab = "NDMI", col = "blue"
+) +
   abline(lm(pi_mpb_killed_pc ~ ndmi, data = darkwoods_beetle_plots_data), col = "red")
 ```
 
@@ -58,7 +61,7 @@ plot(pi_mpb_killed_pc ~ ndmi, data = darkwoods_beetle_plots_data,
 Splitting data 70:30 for training samples based on outcome variable: `pi_mpb_killed_pc`.
 
 ```{r, message=FALSE, warning=FALSE}
-beetle_training.samples <- createDataPartition(darkwoods_beetle_plots_data$pi_mpb_killed, p=0.70, list = FALSE)
+beetle_training.samples <- createDataPartition(darkwoods_beetle_plots_data$pi_mpb_killed, p = 0.70, list = FALSE)
 beetle_train.data <- darkwoods_beetle_plots_data[beetle_training.samples, ]
 beetle_test.data <- darkwoods_beetle_plots_data[-beetle_training.samples, ]
 ```
@@ -66,15 +69,19 @@ beetle_test.data <- darkwoods_beetle_plots_data[-beetle_training.samples, ]
 Training regimes set with `time-slice` grid and 10K-fold cross validation with 10 repeats using `repeatedcv` function.
 
 ```{r, message=FALSE, warning=FALSE}
-model_training_time_series <- trainControl(method = "timeslice",
-                                           initialWindow = 36,
-                                           horizon = 12,
-                                           fixedWindow = TRUE)
+model_training_time_series <- trainControl(
+  method = "timeslice",
+  initialWindow = 36,
+  horizon = 12,
+  fixedWindow = TRUE
+)
 
-model_training_10kfold <- trainControl(method = "repeatedcv", 
-                                       number = 10, repeats=10)
-                                       # animation of 10-kfold method:
-knitr::include_graphics(path="animation.gif")
+model_training_10kfold <- trainControl(
+  method = "repeatedcv",
+  number = 10, repeats = 10
+)
+# animation of 10-kfold method:
+knitr::include_graphics(path = "animation.gif")
 ```
 
 ### 1.4 Model Tuning
@@ -82,83 +89,87 @@ knitr::include_graphics(path="animation.gif")
 Models are fitted with the `svmLinear` support vector machine linear kernel and tuned with 3-step tuning grid and maximum of 20 hyperparameters. Data preprocessing included using `center` and `scale` functions.
 
 ```{r, message=FALSE, warning=FALSE}
-#model 1 - NDMI - model specification
+# model 1 - NDMI - model specification
 svm_ndmi_linear <- train(pi_mpb_killed ~ ndmi,
-                         data = beetle_train.data,
-                         method = "svmLinear",
-                         trControl = model_training_10kfold,
-                         preProcess = c("center","scale"),
-                         tuneLength=10)
+  data = beetle_train.data,
+  method = "svmLinear",
+  trControl = model_training_10kfold,
+  preProcess = c("center", "scale"),
+  tuneLength = 10
+)
 
 svm_ndmi_radial <- train(pi_mpb_killed ~ ndmi,
-                         data = beetle_train.data,
-                         method = "svmRadial",
-                         trControl = model_training_10kfold, 
-                         preProcess = c("center","scale"), 
-                         tuneLength=10)
+  data = beetle_train.data,
+  method = "svmRadial",
+  trControl = model_training_10kfold,
+  preProcess = c("center", "scale"),
+  tuneLength = 10
+)
 
-rf_ndmi_1000trees = train(pi_mpb_killed ~ ndmi,
-                          data = beetle_train.data, 
-                          method="rf", ntree=1000, 
-                          metric="RMSE",
-                          trControl=model_training_10kfold,
-                          importance = TRUE)
-
+rf_ndmi_1000trees <- train(pi_mpb_killed ~ ndmi,
+  data = beetle_train.data,
+  method = "rf", ntree = 1000,
+  metric = "RMSE",
+  trControl = model_training_10kfold,
+  importance = TRUE
+)
 ```
 
 ### 1.5 Model Validation
 
 ```{r, message=FALSE, warning=FALSE}
-#model 4 - results
+# model 4 - results
 beetle_ndmi_pred_train <- predict(svm_ndmi_linear, data = beetle_train.data)
 beetle_ndmi_pred_train_mae <- mae(beetle_ndmi_pred_train, beetle_train.data$pi_mpb_killed)
 beetle_ndmi_pred_train_mae
-beetle_ndmi_pred_train_mae_rel <- (beetle_ndmi_pred_train_mae/mean(beetle_train.data$pi_mpb_killed))*100
+beetle_ndmi_pred_train_mae_rel <- (beetle_ndmi_pred_train_mae / mean(beetle_train.data$pi_mpb_killed)) * 100
 beetle_ndmi_pred_train_mae_rel
 beetle_ndmi_pred_train_rmse <- rmse(beetle_ndmi_pred_train, beetle_train.data$pi_mpb_killed)
 beetle_ndmi_pred_train_rmse
-beetle_ndmi_pred_train_rmse_rel <- (beetle_ndmi_pred_train_rmse/mean(beetle_train.data$pi_mpb_killed))*100
+beetle_ndmi_pred_train_rmse_rel <- (beetle_ndmi_pred_train_rmse / mean(beetle_train.data$pi_mpb_killed)) * 100
 beetle_ndmi_pred_train_rmse_rel
 beetle_ndmi_pred_train_R2 <- R2(beetle_ndmi_pred_train, beetle_train.data$pi_mpb_killed)
 beetle_ndmi_pred_train_R2
 TheilU(beetle_train.data$pi_mpb_killed, beetle_ndmi_pred_train, type = 2)
-beetle_ndmi_pred_train_Ubias <- ((beetle_ndmi_pred_train_mae)*20)/((beetle_ndmi_pred_train_mae)^2)
+beetle_ndmi_pred_train_Ubias <- ((beetle_ndmi_pred_train_mae) * 20) / ((beetle_ndmi_pred_train_mae)^2)
 beetle_ndmi_pred_train_Ubias
 
 beetle_ndmi_pred_test <- predict(svm_ndmi_linear, data = darkwoods_beetle_plots_data)
 beetle_ndmi_pred_test_rmse <- rmse(beetle_ndmi_pred_test, darkwoods_beetle_plots_data$pi_mpb_killed)
-beetle_ndmi_pred_test_rmse/beetle_ndmi_pred_train_rmse
+beetle_ndmi_pred_test_rmse / beetle_ndmi_pred_train_rmse
 ```
 
 ## 2. Full Model List
 
 ```{r,message=FALSE, warning=FALSE}
-
-#model 2 - TAS-WET - model specification
+# model 2 - TAS-WET - model specification
 svm_taswet_linear <- train(pi_mpb_killed ~ taswet,
-                         data = beetle_train.data,
-                         method = "svmLinear",
-                         trControl = model_training_10kfold,
-                         preProcess = c("center","scale"),
-                         tuneGrid = expand.grid(C=seq(0,3, length = 20)))
+  data = beetle_train.data,
+  method = "svmLinear",
+  trControl = model_training_10kfold,
+  preProcess = c("center", "scale"),
+  tuneGrid = expand.grid(C = seq(0, 3, length = 20))
+)
 
-#model 3 - TAS-GRE - model specification
+# model 3 - TAS-GRE - model specification
 svm_tasgreen_linear <- train(pi_mpb_killed ~ tasgre,
-                         data = beetle_train.data,
-                         method = "svmLinear",
-                         trControl = model_training_10kfold,
-                         preProcess = c("center","scale"),
-                         tuneGrid = expand.grid(C=seq(0,3, length = 20)))
+  data = beetle_train.data,
+  method = "svmLinear",
+  trControl = model_training_10kfold,
+  preProcess = c("center", "scale"),
+  tuneGrid = expand.grid(C = seq(0, 3, length = 20))
+)
 
-#model 4 - TAS-BRI - model specification
+# model 4 - TAS-BRI - model specification
 svm_tasbright_linear <- train(pi_mpb_killed ~ tasbri,
-                         data = beetle_train.data,
-                         method = "svmLinear",
-                         trControl = model_training_10kfold,
-                         preProcess = c("center","scale"),
-                         tuneGrid = expand.grid(C=seq(0,3, length = 20)))
+  data = beetle_train.data,
+  method = "svmLinear",
+  trControl = model_training_10kfold,
+  preProcess = c("center", "scale"),
+  tuneGrid = expand.grid(C = seq(0, 3, length = 20))
+)
 
-#model 1 results
+# model 1 results
 svm_ndmi_linear
 svm_ndmi_linear$finalModel
 trellis.par.set(caretTheme())
@@ -255,5 +266,3 @@ wilcox.test(B5NIR ~ RA_NonRA, data = darkwoods_beetle_spectrals)
 wilcox.test(B6SW1 ~ RA_NonRA, data = darkwoods_beetle_spectrals)
 wilcox.test(B7SW2 ~ RA_NonRA, data = darkwoods_beetle_spectrals)
 ```
-
-
