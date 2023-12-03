@@ -105,10 +105,10 @@ model_training_time_series <- trainControl(method = "timeslice",
 model_training_10kfold <- trainControl(method = "repeatedcv",
     number = 10, repeats = 10)
 # animation of 10-kfold method:
-animation::cv.ani(k = 10)
+knitr::include_graphics(path = "animation.gif")
 ```
 
-![](darkwoods_beetles_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->![](darkwoods_beetles_files/figure-gfm/unnamed-chunk-4-2.png)<!-- -->![](darkwoods_beetles_files/figure-gfm/unnamed-chunk-4-3.png)<!-- -->![](darkwoods_beetles_files/figure-gfm/unnamed-chunk-4-4.png)<!-- -->![](darkwoods_beetles_files/figure-gfm/unnamed-chunk-4-5.png)<!-- -->![](darkwoods_beetles_files/figure-gfm/unnamed-chunk-4-6.png)<!-- -->![](darkwoods_beetles_files/figure-gfm/unnamed-chunk-4-7.png)<!-- -->![](darkwoods_beetles_files/figure-gfm/unnamed-chunk-4-8.png)<!-- -->![](darkwoods_beetles_files/figure-gfm/unnamed-chunk-4-9.png)<!-- -->![](darkwoods_beetles_files/figure-gfm/unnamed-chunk-4-10.png)<!-- -->
+![](animation.gif)<!-- -->
 
 ### 1.4 Model Tuning
 
@@ -231,8 +231,8 @@ svm_ndmi_linear
     Summary of sample sizes: 18, 18, 18, 18, 18, 18, ... 
     Resampling results:
 
-      RMSE      Rsquared  MAE     
-      14.69891  1         12.84142
+      RMSE     Rsquared  MAE    
+      14.7918  1         12.8896
 
     Tuning parameter 'C' was held constant at a value of 1
 
@@ -267,13 +267,13 @@ svm_taswet_linear$finalModel
     Support Vector Machine object of class "ksvm" 
 
     SV type: eps-svr  (regression) 
-     parameter : epsilon = 0.1  cost C = 3 
+     parameter : epsilon = 0.1  cost C = 1.26315789473684 
 
     Linear (vanilla) kernel function. 
 
     Number of Support Vectors : 19 
 
-    Objective Function Value : -39.3525 
+    Objective Function Value : -16.603 
     Training error : 1.103527 
 
 ``` r
@@ -300,28 +300,28 @@ svm_tasgreen_linear
 
       C          RMSE      Rsquared  MAE     
       0.0000000       NaN  NaN            NaN
-      0.1578947  14.90197    1       12.86992
-      0.3157895  14.77472    1       12.80648
-      0.4736842  14.70217    1       12.76627
-      0.6315789  14.65575    1       12.72341
-      0.7894737  14.60836    1       12.68705
-      0.9473684  14.58204    1       12.64617
-      1.1052632  14.56585    1       12.62416
-      1.2631579  14.55356    1       12.60746
-      1.4210526  14.52967    1       12.58102
-      1.5789474  14.51433    1       12.56374
-      1.7368421  14.50950    1       12.55841
-      1.8947368  14.50782    1       12.55475
-      2.0526316  14.50454    1       12.55124
-      2.2105263  14.50751    1       12.54916
-      2.3684211  14.51457    1       12.54999
-      2.5263158  14.52341    1       12.55346
-      2.6842105  14.52609    1       12.55586
-      2.8421053  14.52776    1       12.55606
-      3.0000000  14.52750    1       12.55564
+      0.1578947  14.81055    1       12.88699
+      0.3157895  14.66764    1       12.79469
+      0.4736842  14.60755    1       12.74808
+      0.6315789  14.56003    1       12.72289
+      0.7894737  14.47601    1       12.66325
+      0.9473684  14.46474    1       12.62098
+      1.1052632  14.44848    1       12.59831
+      1.2631579  14.44000    1       12.58536
+      1.4210526  14.43257    1       12.57673
+      1.5789474  14.43082    1       12.57485
+      1.7368421  14.42996    1       12.57169
+      1.8947368  14.42620    1       12.56361
+      2.0526316  14.41957    1       12.55650
+      2.2105263  14.42045    1       12.54937
+      2.3684211  14.40999    1       12.53383
+      2.5263158  14.41096    1       12.53437
+      2.6842105  14.41146    1       12.53404
+      2.8421053  14.41318    1       12.53438
+      3.0000000  14.41287    1       12.53382
 
     RMSE was used to select the optimal model using the smallest value.
-    The final value used for the model was C = 2.052632.
+    The final value used for the model was C = 2.368421.
 
 ``` r
 svm_tasgreen_linear$finalModel
@@ -330,13 +330,13 @@ svm_tasgreen_linear$finalModel
     Support Vector Machine object of class "ksvm" 
 
     SV type: eps-svr  (regression) 
-     parameter : epsilon = 0.1  cost C = 2.05263157894737 
+     parameter : epsilon = 0.1  cost C = 2.36842105263158 
 
     Linear (vanilla) kernel function. 
 
     Number of Support Vectors : 19 
 
-    Objective Function Value : -26.9466 
+    Objective Function Value : -31.0799 
     Training error : 1.131827 
 
 ``` r
@@ -363,28 +363,28 @@ svm_tasbright_linear
 
       C          RMSE      Rsquared  MAE     
       0.0000000       NaN  NaN            NaN
-      0.1578947  14.99098    1       12.99043
-      0.3157895  14.79765    1       12.86416
-      0.4736842  14.74247    1       12.84075
-      0.6315789  14.76346    1       12.86317
-      0.7894737  14.78402    1       12.88477
-      0.9473684  14.78283    1       12.88239
-      1.1052632  14.77783    1       12.87731
-      1.2631579  14.77431    1       12.87459
-      1.4210526  14.78552    1       12.87912
-      1.5789474  14.78877    1       12.88261
-      1.7368421  14.78871    1       12.88253
-      1.8947368  14.78872    1       12.88256
-      2.0526316  14.78306    1       12.87925
-      2.2105263  14.77945    1       12.87443
-      2.3684211  14.76153    1       12.86962
-      2.5263158  14.75282    1       12.86474
-      2.6842105  14.74776    1       12.85998
-      2.8421053  14.73937    1       12.85519
-      3.0000000  14.73953    1       12.85594
+      0.1578947  14.60487    1       13.07723
+      0.3157895  14.51137    1       13.03732
+      0.4736842  14.47029    1       13.00260
+      0.6315789  14.45903    1       12.97040
+      0.7894737  14.46214    1       12.95190
+      0.9473684  14.47403    1       12.96633
+      1.1052632  14.47228    1       12.96696
+      1.2631579  14.47087    1       12.96006
+      1.4210526  14.47802    1       12.96429
+      1.5789474  14.47907    1       12.95929
+      1.7368421  14.48107    1       12.96214
+      1.8947368  14.48548    1       12.96643
+      2.0526316  14.48540    1       12.96876
+      2.2105263  14.48361    1       12.96639
+      2.3684211  14.47465    1       12.96399
+      2.5263158  14.47036    1       12.96158
+      2.6842105  14.46768    1       12.95914
+      2.8421053  14.46356    1       12.95672
+      3.0000000  14.46132    1       12.95451
 
     RMSE was used to select the optimal model using the smallest value.
-    The final value used for the model was C = 2.842105.
+    The final value used for the model was C = 0.6315789.
 
 ``` r
 svm_tasbright_linear$finalModel
@@ -393,13 +393,13 @@ svm_tasbright_linear$finalModel
     Support Vector Machine object of class "ksvm" 
 
     SV type: eps-svr  (regression) 
-     parameter : epsilon = 0.1  cost C = 2.84210526315789 
+     parameter : epsilon = 0.1  cost C = 0.631578947368421 
 
     Linear (vanilla) kernel function. 
 
     Number of Support Vectors : 19 
 
-    Objective Function Value : -37.5788 
+    Objective Function Value : -8.4089 
     Training error : 1.120976 
 
 ``` r

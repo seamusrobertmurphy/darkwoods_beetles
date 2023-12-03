@@ -74,7 +74,7 @@ model_training_time_series <- trainControl(method = "timeslice",
 model_training_10kfold <- trainControl(method = "repeatedcv", 
                                        number = 10, repeats=10)
                                        # animation of 10-kfold method:
-animation::cv.ani(k=10)
+knitr::include_graphics(path="animation.gif")
 ```
 
 ### 1.4 Model Tuning
