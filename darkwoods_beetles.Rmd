@@ -2,27 +2,17 @@
 title: "Remote sensing of Mountain pine beetle outbreaks; Darkwoods Conservation Area"
 author: "SMurphy"
 date: "2020-11-02"
-output: github_document
+output:
+  github_document:
+    toc: TRUE
+    toc_depth: 5
+    df_print: tibble
+#always_allow_html: yes
 ---
 
-
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, message = FALSE, warning=FALSE, error=FALSE}
+options(htmltools.dir.version = FALSE, htmltools.preserve.raw = FALSE)
 library(readxl)
-#library(spdep)
-#library(gstat)
-#library(rgdal)
-#library(maptools)
-#library(raster)
-#library(spatstat)
-#library(GISTools)
-#library(rgeos)
-#library(sp)
-#library(rpanel)
-#library(ncf)
-#library(sf)
-#library(spatial)
-#library(spatstat.data)
-#library(spatstat.local)
 library(ggplot2)
 library(dplyr)
 library(RColorBrewer)
@@ -30,22 +20,29 @@ library(psych)
 library(useful)
 library(caret)
 library(tibble)
-knitr::opts_chunk$set(echo = TRUE)
+library(DescTools)
+library(animation)
+library(ModelMetrics)
+knitr::opts_chunk$set(
+  echo = TRUE, message = FALSE, warning = FALSE, 
+  error=FALSE, comment = NA,tidy.opts=list(width.cutoff=60),tidy=TRUE)
 ```
 
-## Import & tidy
+## 1. Model Designs
 
-Set seeds to "123". Import excel data representing plot-sampled pixel data from candidate spectral indices.
+### 1.1 Import Data
 
-```{r}
+Set seeds to `123`. Import excel data representing training data of red-stage beetle attacks from candidate spectral indices sample in-field in forest health surveys.
+
+```{r, message=FALSE, warning=FALSE}
 set.seed(123) 
 darkwoods_beetle_plots_data <- read_excel("2.1.darkwoods_beetle_ground_plots.xlsx")
 print(darkwoods_beetle_plots_data)
 ```
 
-## Derive NDMI predictors
+### 1.2 Model Slope
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 beetle_ndmi <- lm(pi_mpb_killed_pc ~ ndmi, data = darkwoods_beetle_plots_data)
 beetle_ndmi_residuals <- resid(beetle_ndmi)
 summary(beetle_ndmi)
@@ -56,29 +53,207 @@ plot(pi_mpb_killed_pc ~ ndmi, data = darkwoods_beetle_plots_data,
   abline(lm(pi_mpb_killed_pc ~ ndmi, data = darkwoods_beetle_plots_data), col = "red")
 ```
 
-## Train models
+### 1.3 Model Training
 
-Splitting data 70:30 for training samples based on outcome variable.
+Splitting data 70:30 for training samples based on outcome variable: `pi_mpb_killed_pc`.
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 beetle_training.samples <- createDataPartition(darkwoods_beetle_plots_data$pi_mpb_killed, p=0.70, list = FALSE)
 beetle_train.data <- darkwoods_beetle_plots_data[beetle_training.samples, ]
 beetle_test.data <- darkwoods_beetle_plots_data[-beetle_training.samples, ]
 ```
 
+Training regimes set with `time-slice` grid and 10K-fold cross validation with 10 repeats using `repeatedcv` function.
 
-#### Model training method: time-series
-
-```{r}
+```{r, message=FALSE, warning=FALSE}
 model_training_time_series <- trainControl(method = "timeslice",
                                            initialWindow = 36,
                                            horizon = 12,
                                            fixedWindow = TRUE)
-```
 
-#### Model training method: 10K-Fold x10repeat
-
-```{r}
 model_training_10kfold <- trainControl(method = "repeatedcv", 
-                                       number = 10, repeats = 10)
+                                       number = 10, repeats=10)
+                                       # animation of 10-kfold method:
+animation::cv.ani(k=10)
 ```
+
+### 1.4 Model Tuning
+
+Models are fitted with the `svmLinear` support vector machine linear kernel and tuned with 3-step tuning grid and maximum of 20 hyperparameters. Data preprocessing included using `center` and `scale` functions.
+
+```{r, message=FALSE, warning=FALSE}
+#model 1 - NDMI - model specification
+svm_ndmi_linear <- train(pi_mpb_killed ~ ndmi,
+                         data = beetle_train.data,
+                         method = "svmLinear",
+                         trControl = model_training_10kfold,
+                         preProcess = c("center","scale"),
+                         tuneLength=10)
+
+svm_ndmi_radial <- train(pi_mpb_killed ~ ndmi,
+                         data = beetle_train.data,
+                         method = "svmRadial",
+                         trControl = model_training_10kfold, 
+                         preProcess = c("center","scale"), 
+                         tuneLength=10)
+
+rf_ndmi_1000trees = train(pi_mpb_killed ~ ndmi,
+                          data = beetle_train.data, 
+                          method="rf", ntree=1000, 
+                          metric="RMSE",
+                          trControl=model_training_10kfold,
+                          importance = TRUE)
+
+```
+
+### 1.5 Model Validation
+
+```{r, message=FALSE, warning=FALSE}
+#model 4 - results
+beetle_ndmi_pred_train <- predict(svm_ndmi_linear, data = beetle_train.data)
+beetle_ndmi_pred_train_mae <- mae(beetle_ndmi_pred_train, beetle_train.data$pi_mpb_killed)
+beetle_ndmi_pred_train_mae
+beetle_ndmi_pred_train_mae_rel <- (beetle_ndmi_pred_train_mae/mean(beetle_train.data$pi_mpb_killed))*100
+beetle_ndmi_pred_train_mae_rel
+beetle_ndmi_pred_train_rmse <- rmse(beetle_ndmi_pred_train, beetle_train.data$pi_mpb_killed)
+beetle_ndmi_pred_train_rmse
+beetle_ndmi_pred_train_rmse_rel <- (beetle_ndmi_pred_train_rmse/mean(beetle_train.data$pi_mpb_killed))*100
+beetle_ndmi_pred_train_rmse_rel
+beetle_ndmi_pred_train_R2 <- R2(beetle_ndmi_pred_train, beetle_train.data$pi_mpb_killed)
+beetle_ndmi_pred_train_R2
+TheilU(beetle_train.data$pi_mpb_killed, beetle_ndmi_pred_train, type = 2)
+beetle_ndmi_pred_train_Ubias <- ((beetle_ndmi_pred_train_mae)*20)/((beetle_ndmi_pred_train_mae)^2)
+beetle_ndmi_pred_train_Ubias
+
+beetle_ndmi_pred_test <- predict(svm_ndmi_linear, data = darkwoods_beetle_plots_data)
+beetle_ndmi_pred_test_rmse <- rmse(beetle_ndmi_pred_test, darkwoods_beetle_plots_data$pi_mpb_killed)
+beetle_ndmi_pred_test_rmse/beetle_ndmi_pred_train_rmse
+```
+
+## 2. Full Model List
+
+```{r,message=FALSE, warning=FALSE}
+
+#model 2 - TAS-WET - model specification
+svm_taswet_linear <- train(pi_mpb_killed ~ taswet,
+                         data = beetle_train.data,
+                         method = "svmLinear",
+                         trControl = model_training_10kfold,
+                         preProcess = c("center","scale"),
+                         tuneGrid = expand.grid(C=seq(0,3, length = 20)))
+
+#model 3 - TAS-GRE - model specification
+svm_tasgreen_linear <- train(pi_mpb_killed ~ tasgre,
+                         data = beetle_train.data,
+                         method = "svmLinear",
+                         trControl = model_training_10kfold,
+                         preProcess = c("center","scale"),
+                         tuneGrid = expand.grid(C=seq(0,3, length = 20)))
+
+#model 4 - TAS-BRI - model specification
+svm_tasbright_linear <- train(pi_mpb_killed ~ tasbri,
+                         data = beetle_train.data,
+                         method = "svmLinear",
+                         trControl = model_training_10kfold,
+                         preProcess = c("center","scale"),
+                         tuneGrid = expand.grid(C=seq(0,3, length = 20)))
+
+#model 1 results
+svm_ndmi_linear
+svm_ndmi_linear$finalModel
+trellis.par.set(caretTheme())
+densityplot(svm_ndmi_linear)
+
+# model 2 results
+svm_taswet_linear$finalModel
+trellis.par.set(caretTheme())
+densityplot(svm_taswet_linear)
+
+# model 3 results
+svm_tasgreen_linear
+svm_tasgreen_linear$finalModel
+trellis.par.set(caretTheme())
+densityplot(svm_tasgreen_linear)
+
+# model 4 results
+svm_tasbright_linear
+svm_tasbright_linear$finalModel
+trellis.par.set(caretTheme())
+densityplot(svm_tasbright_linear)
+```
+
+## 3. Appendix: Seperability Analysis of Spectral Bands & Indices
+
+```{r, message=FALSE, warning=FALSE}
+darkwoods_beetle_spectrals <- read_excel("2.2.darkwoods_beetle_spectral_sampling.xlsx")
+describe(darkwoods_beetle_spectrals$NDMI_c)
+mean(darkwoods_beetle_spectrals$NDMI_c)
+SD(darkwoods_beetle_spectrals$NDMI_c)
+median(darkwoods_beetle_spectrals$NDMI_c)
+MeanSE(darkwoods_beetle_spectrals$NDMI_c)
+shapiro.test(darkwoods_beetle_spectrals$NDMI_c)
+
+mean(darkwoods_beetle_spectrals$TASWET)
+SD(darkwoods_beetle_spectrals$TASWET)
+median(darkwoods_beetle_spectrals$TASWET)
+MeanSE(darkwoods_beetle_spectrals$TASWET)
+shapiro.test(darkwoods_beetle_spectrals$TASWET)
+
+mean(darkwoods_beetle_spectrals$TASBRI)
+SD(darkwoods_beetle_spectrals$TASBRI)
+median(darkwoods_beetle_spectrals$TASBRI)
+MeanSE(darkwoods_beetle_spectrals$TASBRI)
+shapiro.test(darkwoods_beetle_spectrals$TASBRI)
+
+mean(darkwoods_beetle_spectrals$TASGRE)
+SD(darkwoods_beetle_spectrals$TASGRE)
+median(darkwoods_beetle_spectrals$TASGRE)
+MeanSE(darkwoods_beetle_spectrals$TASGRE)
+shapiro.test(darkwoods_beetle_spectrals$TASGRE)
+
+mean(darkwoods_beetle_spectrals$B5NIR)
+SD(darkwoods_beetle_spectrals$B5NIR)
+median(darkwoods_beetle_spectrals$B5NIR)
+MeanSE(darkwoods_beetle_spectrals$B5NIR)
+shapiro.test(darkwoods_beetle_spectrals$B5NIR)
+
+mean(darkwoods_beetle_spectrals$B1Aerosol)
+SD(darkwoods_beetle_spectrals$B1Aerosol)
+median(darkwoods_beetle_spectrals$B1Aerosol)
+MeanSE(darkwoods_beetle_spectrals$B1Aerosol)
+shapiro.test(darkwoods_beetle_spectrals$B1Aerosol)
+
+mean(darkwoods_beetle_spectrals$B2Blue)
+SD(darkwoods_beetle_spectrals$B2Blue)
+median(darkwoods_beetle_spectrals$B2Blue)
+MeanSE(darkwoods_beetle_spectrals$B2Blue)
+shapiro.test(darkwoods_beetle_spectrals$B2Blue)
+
+mean(darkwoods_beetle_spectrals$B7SW2)
+SD(darkwoods_beetle_spectrals$B7SW2)
+median(darkwoods_beetle_spectrals$B7SW2)
+MeanSE(darkwoods_beetle_spectrals$B7SW2)
+shapiro.test(darkwoods_beetle_spectrals$B7SW2)
+
+mean(darkwoods_beetle_spectrals$B4Red)
+SD(darkwoods_beetle_spectrals$B4Red)
+median(darkwoods_beetle_spectrals$B4Red)
+MeanSE(darkwoods_beetle_spectrals$B4Red)
+shapiro.test(darkwoods_beetle_spectrals$B4Red)
+
+mean(darkwoods_beetle_spectrals$B3Gree)
+SD(darkwoods_beetle_spectrals$B3Gree)
+median(darkwoods_beetle_spectrals$B3Gree)
+MeanSE(darkwoods_beetle_spectrals$B3Gree)
+shapiro.test(darkwoods_beetle_spectrals$B3Gree)
+
+wilcox.test(B1Aerosol ~ RA_NonRA, data = darkwoods_beetle_spectrals)
+wilcox.test(B2Blue ~ RA_NonRA, data = darkwoods_beetle_spectrals)
+wilcox.test(B3Gree ~ RA_NonRA, data = darkwoods_beetle_spectrals)
+wilcox.test(B4Red ~ RA_NonRA, data = darkwoods_beetle_spectrals)
+wilcox.test(B5NIR ~ RA_NonRA, data = darkwoods_beetle_spectrals)
+wilcox.test(B6SW1 ~ RA_NonRA, data = darkwoods_beetle_spectrals)
+wilcox.test(B7SW2 ~ RA_NonRA, data = darkwoods_beetle_spectrals)
+```
+
+
