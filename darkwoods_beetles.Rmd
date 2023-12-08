@@ -86,9 +86,9 @@ knitr::include_graphics(path = "animation.gif")
 
 ### 1.4 Model Tuning
 
-Models are fitted with the `svmLinear` support vector machine linear kernel and tuned with 3-step tuning grid and maximum of 20 hyperparameters. Data preprocessing included using `center` and `scale` functions.
+Models are fitted with support vector machine kernels `svmLinear` & `svmRadial` and a randomForest regression tree `rf` tuned with 3-step tuning grid, maximum of 10 hyperparameters, and 1,000 decision branches. Data was preprocessed using `center` and `scale` functions.
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, cache=TRUE}
 # model 1 - NDMI - model specification
 svm_ndmi_linear <- train(pi_mpb_killed ~ ndmi,
   data = beetle_train.data,
@@ -117,7 +117,18 @@ rf_ndmi_1000trees <- train(pi_mpb_killed ~ ndmi,
 
 ### 1.5 Model Validation
 
-```{r, message=FALSE, warning=FALSE}
+Following results were used to populate 'Table 13' of the current manuscript, as shown directly below.
+
+|         |             |          |                 |             |       |       |
+|---------|-------------|----------|-----------------|-------------|-------|-------|
+|         | **R2**      | **RMSE** | **RMSE^ratio^** | **U^bias^** | **C** | **ε** |
+| NBR     | 0.879\*\*\* | 1.05     | 0.46            | 0.035       | 0.316 | 0.10  |
+| BAI2-SL | 0.183\*\*\* | 2.61     | 1.09            | 0.307       | 1.105 | 0.10  |
+| MIRBI   | 0.551\*\*\* | 1.94     | 1.16            | 0.469       | 0.316 | 0.10  |
+| TVI     | 0.584\*\*\* | 1.88     | 1.16            | 0.432       | 0.474 | 0.10  |
+| TVI-SW  | 0.241\*\*\* | 2.54     | 1.10            | 0.343       | 0.158 | 0.10  |
+
+```{r, message=FALSE, warning=FALSE, eval=FALSE}
 # model 4 - results
 beetle_ndmi_pred_train <- predict(svm_ndmi_linear, data = beetle_train.data)
 beetle_ndmi_pred_train_mae <- mae(beetle_ndmi_pred_train, beetle_train.data$pi_mpb_killed)
@@ -141,7 +152,7 @@ beetle_ndmi_pred_test_rmse / beetle_ndmi_pred_train_rmse
 
 ## 2. Full Model List
 
-```{r,message=FALSE, warning=FALSE}
+```{r,message=FALSE, warning=FALSE, fig.show='hold', out.width='50%'}
 # model 2 - TAS-WET - model specification
 svm_taswet_linear <- train(pi_mpb_killed ~ taswet,
   data = beetle_train.data,
@@ -193,9 +204,26 @@ trellis.par.set(caretTheme())
 densityplot(svm_tasbright_linear)
 ```
 
-## 3. Appendix: Seperability Analysis of Spectral Bands & Indices
+## 3. Appendix: Separability Analysis of Spectral Bands & Indices
 
-```{r, message=FALSE, warning=FALSE}
+Following code chunk was used to populate 'Table 11' and 'Table 12' of the current manuscript, as shown directly below.
+
+|                             |           |          |           |          |              |              |
+|--------------|----------|----------|----------|----------|----------|----------|
+| **Spectral wavelength^nm^** | **M**     | **SD**   | **Mdn**   | **SE**   | **Mdist^W^** | **SW^p^**    |
+| NIR                         | 11674.510 | 2238.136 | 10834.500 | 127.118  | 1.135\*\*\*  |  0.923\*\*\* |
+| Aerosol                     | 8432.161  | 139.832  | 8438.000  | 7.942    | 0.296\*\*\*  | 0.904\*\*\*  |
+| Blue                        | 7689.177  | 160.719  | 7675.500  | 9.128245 | 0.294\*\*\*  | 0.841\*\*\*  |
+| SWIR2                       | 6637.829  | 706.8761 | 6482.500  | 40.14787 | 0.284\*\*\*  | 0.797\*\*\*  |
+| Red                         | 6426.016  | 316.7762 | 6341.5    | 17.99168 | 0.197\*\*\*  | 0.727\*\*\*  |
+| Green                       | 7068.503  | 240.7531 | 6998.000  | 13.67386 | 0.011        | 0.794\*\*\*  |
+| **Spectral index^nm^**      |           |          |           |          |              |              |
+| NDMI                        | 0.5836    | 0.144    | 0.551     | 0.027    | 1.004        | 0.943        |
+| TAS-Wet                     | -4013.162 | 399.494  | -3911.261 | 75.497   | 0.240\*\*\*  | 0.904\*\*    |
+| TAS-Bright                  | 16470.480 | 616.788  | 16354.130 | 116.562  | 0.171\*\*\*  | 0.917\*      |
+| TAS-Green                   | 8528.016  | 299.830  | 8474.081  | 56.663   | 0.092        | 0.906\*      |
+
+```{r, message=FALSE, warning=FALSE, eval=FALSE}
 darkwoods_beetle_spectrals <- read_excel("2.2.darkwoods_beetle_spectral_sampling.xlsx")
 describe(darkwoods_beetle_spectrals$NDMI_c)
 mean(darkwoods_beetle_spectrals$NDMI_c)

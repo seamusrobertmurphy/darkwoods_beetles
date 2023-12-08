@@ -11,8 +11,8 @@ SMurphy
   - [1.4 Model Tuning](#14-model-tuning)
   - [1.5 Model Validation](#15-model-validation)
 - [2. Full Model List](#2-full-model-list)
-- [3. Appendix: Seperability Analysis of Spectral Bands &
-  Indices](#3-appendix-seperability-analysis-of-spectral-bands--indices)
+- [3. Appendix: Separability Analysis of Spectral Bands &
+  Indices](#3-appendix-separability-analysis-of-spectral-bands--indices)
 
 ## 1. Model Designs
 
@@ -117,10 +117,10 @@ knitr::include_graphics(path = "animation.gif")
 
 ### 1.4 Model Tuning
 
-Models are fitted with the `svmLinear` support vector machine linear
-kernel and tuned with 3-step tuning grid and maximum of 20
-hyperparameters. Data preprocessing included using `center` and `scale`
-functions.
+Models are fitted with support vector machine kernels `svmLinear` &
+`svmRadial` and a randomForest regression tree `rf` tuned with 3-step
+tuning grid, maximum of 10 hyperparameters, and 1,000 decision branches.
+Data was preprocessed using `center` and `scale` functions.
 
 ``` r
 # model 1 - NDMI - model specification
@@ -151,63 +151,39 @@ rf_ndmi_1000trees <- train(pi_mpb_killed ~ ndmi,
 
 ### 1.5 Model Validation
 
+Following results were used to populate ‘Table 13’ of the current
+manuscript, as shown directly below.
+
+|         |             |          |                          |                      |       |       |
+|---------|-------------|----------|--------------------------|----------------------|-------|-------|
+|         | **R2**      | **RMSE** | **RMSE<sup>ratio</sup>** | **U<sup>bias</sup>** | **C** | **ε** |
+| NBR     | 0.879\*\*\* | 1.05     | 0.46                     | 0.035                | 0.316 | 0.10  |
+| BAI2-SL | 0.183\*\*\* | 2.61     | 1.09                     | 0.307                | 1.105 | 0.10  |
+| MIRBI   | 0.551\*\*\* | 1.94     | 1.16                     | 0.469                | 0.316 | 0.10  |
+| TVI     | 0.584\*\*\* | 1.88     | 1.16                     | 0.432                | 0.474 | 0.10  |
+| TVI-SW  | 0.241\*\*\* | 2.54     | 1.10                     | 0.343                | 0.158 | 0.10  |
+
 ``` r
 # model 4 - results
 beetle_ndmi_pred_train <- predict(svm_ndmi_linear, data = beetle_train.data)
 beetle_ndmi_pred_train_mae <- mae(beetle_ndmi_pred_train, beetle_train.data$pi_mpb_killed)
 beetle_ndmi_pred_train_mae
-```
-
-    [1] 7.931194
-
-``` r
 beetle_ndmi_pred_train_mae_rel <- (beetle_ndmi_pred_train_mae / mean(beetle_train.data$pi_mpb_killed)) * 100
 beetle_ndmi_pred_train_mae_rel
-```
-
-    [1] 43.4615
-
-``` r
 beetle_ndmi_pred_train_rmse <- rmse(beetle_ndmi_pred_train, beetle_train.data$pi_mpb_killed)
 beetle_ndmi_pred_train_rmse
-```
-
-    [1] 14.48146
-
-``` r
 beetle_ndmi_pred_train_rmse_rel <- (beetle_ndmi_pred_train_rmse / mean(beetle_train.data$pi_mpb_killed)) * 100
 beetle_ndmi_pred_train_rmse_rel
-```
-
-    [1] 79.35573
-
-``` r
 beetle_ndmi_pred_train_R2 <- R2(beetle_ndmi_pred_train, beetle_train.data$pi_mpb_killed)
 beetle_ndmi_pred_train_R2
-```
-
-    [1] 0.556276
-
-``` r
 TheilU(beetle_train.data$pi_mpb_killed, beetle_ndmi_pred_train, type = 2)
-```
-
-    [1] 0.6118121
-
-``` r
 beetle_ndmi_pred_train_Ubias <- ((beetle_ndmi_pred_train_mae) * 20) / ((beetle_ndmi_pred_train_mae)^2)
 beetle_ndmi_pred_train_Ubias
-```
 
-    [1] 2.521688
-
-``` r
 beetle_ndmi_pred_test <- predict(svm_ndmi_linear, data = darkwoods_beetle_plots_data)
 beetle_ndmi_pred_test_rmse <- rmse(beetle_ndmi_pred_test, darkwoods_beetle_plots_data$pi_mpb_killed)
 beetle_ndmi_pred_test_rmse / beetle_ndmi_pred_train_rmse
 ```
-
-    [1] 1.131899
 
 ## 2. Full Model List
 
@@ -277,11 +253,7 @@ svm_ndmi_linear$finalModel
 ``` r
 trellis.par.set(caretTheme())
 densityplot(svm_ndmi_linear)
-```
 
-![](darkwoods_beetles_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
-
-``` r
 # model 2 results
 svm_taswet_linear$finalModel
 ```
@@ -301,11 +273,7 @@ svm_taswet_linear$finalModel
 ``` r
 trellis.par.set(caretTheme())
 densityplot(svm_taswet_linear)
-```
 
-![](darkwoods_beetles_files/figure-gfm/unnamed-chunk-7-2.png)<!-- -->
-
-``` r
 # model 3 results
 svm_tasgreen_linear
 ```
@@ -364,11 +332,7 @@ svm_tasgreen_linear$finalModel
 ``` r
 trellis.par.set(caretTheme())
 densityplot(svm_tasgreen_linear)
-```
 
-![](darkwoods_beetles_files/figure-gfm/unnamed-chunk-7-3.png)<!-- -->
-
-``` r
 # model 4 results
 svm_tasbright_linear
 ```
@@ -429,434 +393,96 @@ trellis.par.set(caretTheme())
 densityplot(svm_tasbright_linear)
 ```
 
-![](darkwoods_beetles_files/figure-gfm/unnamed-chunk-7-4.png)<!-- -->
+<img src="darkwoods_beetles_files/figure-gfm/unnamed-chunk-7-1.png" width="50%" /><img src="darkwoods_beetles_files/figure-gfm/unnamed-chunk-7-2.png" width="50%" /><img src="darkwoods_beetles_files/figure-gfm/unnamed-chunk-7-3.png" width="50%" /><img src="darkwoods_beetles_files/figure-gfm/unnamed-chunk-7-4.png" width="50%" />
 
-## 3. Appendix: Seperability Analysis of Spectral Bands & Indices
+## 3. Appendix: Separability Analysis of Spectral Bands & Indices
+
+Following code chunk was used to populate ‘Table 11’ and ‘Table 12’ of
+the current manuscript, as shown directly below.
+
+|                                      |           |          |           |          |                       |                    |
+|--------------------------------------|-----------|----------|-----------|----------|-----------------------|--------------------|
+| **Spectral wavelength<sup>nm</sup>** | **M**     | **SD**   | **Mdn**   | **SE**   | **Mdist<sup>W</sup>** | **SW<sup>p</sup>** |
+| NIR                                  | 11674.510 | 2238.136 | 10834.500 | 127.118  | 1.135\*\*\*           | 0.923\*\*\*        |
+| Aerosol                              | 8432.161  | 139.832  | 8438.000  | 7.942    | 0.296\*\*\*           | 0.904\*\*\*        |
+| Blue                                 | 7689.177  | 160.719  | 7675.500  | 9.128245 | 0.294\*\*\*           | 0.841\*\*\*        |
+| SWIR2                                | 6637.829  | 706.8761 | 6482.500  | 40.14787 | 0.284\*\*\*           | 0.797\*\*\*        |
+| Red                                  | 6426.016  | 316.7762 | 6341.5    | 17.99168 | 0.197\*\*\*           | 0.727\*\*\*        |
+| Green                                | 7068.503  | 240.7531 | 6998.000  | 13.67386 | 0.011                 | 0.794\*\*\*        |
+| **Spectral index<sup>nm</sup>**      |           |          |           |          |                       |                    |
+| NDMI                                 | 0.5836    | 0.144    | 0.551     | 0.027    | 1.004                 | 0.943              |
+| TAS-Wet                              | -4013.162 | 399.494  | -3911.261 | 75.497   | 0.240\*\*\*           | 0.904\*\*          |
+| TAS-Bright                           | 16470.480 | 616.788  | 16354.130 | 116.562  | 0.171\*\*\*           | 0.917\*            |
+| TAS-Green                            | 8528.016  | 299.830  | 8474.081  | 56.663   | 0.092                 | 0.906\*            |
 
 ``` r
 darkwoods_beetle_spectrals <- read_excel("2.2.darkwoods_beetle_spectral_sampling.xlsx")
 describe(darkwoods_beetle_spectrals$NDMI_c)
-```
-
-    # A tibble: 1 × 13
-       vars     n   mean    sd median trimmed   mad   min   max range  skew kurtosis
-      <dbl> <dbl>  <dbl> <dbl>  <dbl>   <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>    <dbl>
-    1     1   310 18099. 2323.  17130  17903. 1916. 14171 23740  9569 0.651   -0.673
-    # ℹ 1 more variable: se <dbl>
-
-``` r
 mean(darkwoods_beetle_spectrals$NDMI_c)
-```
-
-    [1] 18099.21
-
-``` r
 SD(darkwoods_beetle_spectrals$NDMI_c)
-```
-
-    [1] 2323.01
-
-``` r
 median(darkwoods_beetle_spectrals$NDMI_c)
-```
-
-    [1] 17130
-
-``` r
 MeanSE(darkwoods_beetle_spectrals$NDMI_c)
-```
-
-    [1] 131.9381
-
-``` r
 shapiro.test(darkwoods_beetle_spectrals$NDMI_c)
-```
 
-
-        Shapiro-Wilk normality test
-
-    data:  darkwoods_beetle_spectrals$NDMI_c
-    W = 0.92215, p-value = 1.267e-11
-
-``` r
 mean(darkwoods_beetle_spectrals$TASWET)
-```
-
-    [1] -3829.32
-
-``` r
 SD(darkwoods_beetle_spectrals$TASWET)
-```
-
-    [1] 426.7044
-
-``` r
 median(darkwoods_beetle_spectrals$TASWET)
-```
-
-    [1] -3725.465
-
-``` r
 MeanSE(darkwoods_beetle_spectrals$TASWET)
-```
-
-    [1] 24.23518
-
-``` r
 shapiro.test(darkwoods_beetle_spectrals$TASWET)
-```
 
-
-        Shapiro-Wilk normality test
-
-    data:  darkwoods_beetle_spectrals$TASWET
-    W = 0.7774, p-value < 2.2e-16
-
-``` r
 mean(darkwoods_beetle_spectrals$TASBRI)
-```
-
-    [1] 16242.97
-
-``` r
 SD(darkwoods_beetle_spectrals$TASBRI)
-```
-
-    [1] 624.0056
-
-``` r
 median(darkwoods_beetle_spectrals$TASBRI)
-```
-
-    [1] 16097.3
-
-``` r
 MeanSE(darkwoods_beetle_spectrals$TASBRI)
-```
-
-    [1] 35.44114
-
-``` r
 shapiro.test(darkwoods_beetle_spectrals$TASBRI)
-```
 
-
-        Shapiro-Wilk normality test
-
-    data:  darkwoods_beetle_spectrals$TASBRI
-    W = 0.7639, p-value < 2.2e-16
-
-``` r
 mean(darkwoods_beetle_spectrals$TASGRE)
-```
-
-    [1] 8447.343
-
-``` r
 SD(darkwoods_beetle_spectrals$TASGRE)
-```
-
-    [1] 292.6377
-
-``` r
 median(darkwoods_beetle_spectrals$TASGRE)
-```
-
-    [1] 8364.885
-
-``` r
 MeanSE(darkwoods_beetle_spectrals$TASGRE)
-```
-
-    [1] 16.6207
-
-``` r
 shapiro.test(darkwoods_beetle_spectrals$TASGRE)
-```
 
-
-        Shapiro-Wilk normality test
-
-    data:  darkwoods_beetle_spectrals$TASGRE
-    W = 0.72249, p-value < 2.2e-16
-
-``` r
 mean(darkwoods_beetle_spectrals$B5NIR)
-```
-
-    [1] 11674.51
-
-``` r
 SD(darkwoods_beetle_spectrals$B5NIR)
-```
-
-    [1] 2238.136
-
-``` r
 median(darkwoods_beetle_spectrals$B5NIR)
-```
-
-    [1] 10834.5
-
-``` r
 MeanSE(darkwoods_beetle_spectrals$B5NIR)
-```
-
-    [1] 127.1176
-
-``` r
 shapiro.test(darkwoods_beetle_spectrals$B5NIR)
-```
 
-
-        Shapiro-Wilk normality test
-
-    data:  darkwoods_beetle_spectrals$B5NIR
-    W = 0.92321, p-value = 1.579e-11
-
-``` r
 mean(darkwoods_beetle_spectrals$B1Aerosol)
-```
-
-    [1] 8432.161
-
-``` r
 SD(darkwoods_beetle_spectrals$B1Aerosol)
-```
-
-    [1] 139.8324
-
-``` r
 median(darkwoods_beetle_spectrals$B1Aerosol)
-```
-
-    [1] 8438
-
-``` r
 MeanSE(darkwoods_beetle_spectrals$B1Aerosol)
-```
-
-    [1] 7.941949
-
-``` r
 shapiro.test(darkwoods_beetle_spectrals$B1Aerosol)
-```
 
-
-        Shapiro-Wilk normality test
-
-    data:  darkwoods_beetle_spectrals$B1Aerosol
-    W = 0.90397, p-value = 3.892e-13
-
-``` r
 mean(darkwoods_beetle_spectrals$B2Blue)
-```
-
-    [1] 7689.177
-
-``` r
 SD(darkwoods_beetle_spectrals$B2Blue)
-```
-
-    [1] 160.7193
-
-``` r
 median(darkwoods_beetle_spectrals$B2Blue)
-```
-
-    [1] 7675.5
-
-``` r
 MeanSE(darkwoods_beetle_spectrals$B2Blue)
-```
-
-    [1] 9.128245
-
-``` r
 shapiro.test(darkwoods_beetle_spectrals$B2Blue)
-```
 
-
-        Shapiro-Wilk normality test
-
-    data:  darkwoods_beetle_spectrals$B2Blue
-    W = 0.84052, p-value < 2.2e-16
-
-``` r
 mean(darkwoods_beetle_spectrals$B7SW2)
-```
-
-    [1] 6637.829
-
-``` r
 SD(darkwoods_beetle_spectrals$B7SW2)
-```
-
-    [1] 706.8761
-
-``` r
 median(darkwoods_beetle_spectrals$B7SW2)
-```
-
-    [1] 6482.5
-
-``` r
 MeanSE(darkwoods_beetle_spectrals$B7SW2)
-```
-
-    [1] 40.14787
-
-``` r
 shapiro.test(darkwoods_beetle_spectrals$B7SW2)
-```
 
-
-        Shapiro-Wilk normality test
-
-    data:  darkwoods_beetle_spectrals$B7SW2
-    W = 0.79745, p-value < 2.2e-16
-
-``` r
 mean(darkwoods_beetle_spectrals$B4Red)
-```
-
-    [1] 6426.016
-
-``` r
 SD(darkwoods_beetle_spectrals$B4Red)
-```
-
-    [1] 316.7762
-
-``` r
 median(darkwoods_beetle_spectrals$B4Red)
-```
-
-    [1] 6341.5
-
-``` r
 MeanSE(darkwoods_beetle_spectrals$B4Red)
-```
-
-    [1] 17.99168
-
-``` r
 shapiro.test(darkwoods_beetle_spectrals$B4Red)
-```
 
-
-        Shapiro-Wilk normality test
-
-    data:  darkwoods_beetle_spectrals$B4Red
-    W = 0.72745, p-value < 2.2e-16
-
-``` r
 mean(darkwoods_beetle_spectrals$B3Gree)
-```
-
-    [1] 7068.503
-
-``` r
 SD(darkwoods_beetle_spectrals$B3Gree)
-```
-
-    [1] 240.7531
-
-``` r
 median(darkwoods_beetle_spectrals$B3Gree)
-```
-
-    [1] 6998
-
-``` r
 MeanSE(darkwoods_beetle_spectrals$B3Gree)
-```
-
-    [1] 13.67386
-
-``` r
 shapiro.test(darkwoods_beetle_spectrals$B3Gree)
-```
 
-
-        Shapiro-Wilk normality test
-
-    data:  darkwoods_beetle_spectrals$B3Gree
-    W = 0.79389, p-value < 2.2e-16
-
-``` r
 wilcox.test(B1Aerosol ~ RA_NonRA, data = darkwoods_beetle_spectrals)
-```
-
-
-        Wilcoxon rank sum test with continuity correction
-
-    data:  B1Aerosol by RA_NonRA
-    W = 14350, p-value = 1.69e-05
-    alternative hypothesis: true location shift is not equal to 0
-
-``` r
 wilcox.test(B2Blue ~ RA_NonRA, data = darkwoods_beetle_spectrals)
-```
-
-
-        Wilcoxon rank sum test with continuity correction
-
-    data:  B2Blue by RA_NonRA
-    W = 14342, p-value = 1.778e-05
-    alternative hypothesis: true location shift is not equal to 0
-
-``` r
 wilcox.test(B3Gree ~ RA_NonRA, data = darkwoods_beetle_spectrals)
-```
-
-
-        Wilcoxon rank sum test with continuity correction
-
-    data:  B3Gree by RA_NonRA
-    W = 10832, p-value = 0.7361
-    alternative hypothesis: true location shift is not equal to 0
-
-``` r
 wilcox.test(B4Red ~ RA_NonRA, data = darkwoods_beetle_spectrals)
-```
-
-
-        Wilcoxon rank sum test with continuity correction
-
-    data:  B4Red by RA_NonRA
-    W = 14584, p-value = 3.997e-06
-    alternative hypothesis: true location shift is not equal to 0
-
-``` r
 wilcox.test(B5NIR ~ RA_NonRA, data = darkwoods_beetle_spectrals)
-```
-
-
-        Wilcoxon rank sum test with continuity correction
-
-    data:  B5NIR by RA_NonRA
-    W = 5303.5, p-value = 2.356e-14
-    alternative hypothesis: true location shift is not equal to 0
-
-``` r
 wilcox.test(B6SW1 ~ RA_NonRA, data = darkwoods_beetle_spectrals)
-```
-
-
-        Wilcoxon rank sum test with continuity correction
-
-    data:  B6SW1 by RA_NonRA
-    W = 14818, p-value = 8.676e-07
-    alternative hypothesis: true location shift is not equal to 0
-
-``` r
 wilcox.test(B7SW2 ~ RA_NonRA, data = darkwoods_beetle_spectrals)
 ```
-
-
-        Wilcoxon rank sum test with continuity correction
-
-    data:  B7SW2 by RA_NonRA
-    W = 15944, p-value = 1.506e-10
-    alternative hypothesis: true location shift is not equal to 0
